@@ -1,13 +1,7 @@
-// Use "type: commonjs" in package.json to use CommonJS modules
-import express from 'express';
-const app = express();
-const port = 3000;
- 
-// Define your routes
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello from Express on Vercel!' });
-});
- 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+import app from "./app.js";
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`CookBook API running on port ${PORT}`);
 });
