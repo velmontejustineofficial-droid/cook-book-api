@@ -1,8 +1,8 @@
-const environment = globalThis.process?.env ?? {};
+import "dotenv/config";
+
+console.log("DATABASE_URL:", process.env.DATABASE_URL ? "LOADED" : "NOT LOADED");
 
 export const env = {
-    nodeEnv: environment.NODE_ENV || "development",
-    port: Number(environment.PORT) || 3000,
-
-    databaseUrl: environment.DATABASE_URL || "",
+  port: Number(process.env.PORT) || 3000,
+  databaseUrl: process.env.DATABASE_URL,
 };
