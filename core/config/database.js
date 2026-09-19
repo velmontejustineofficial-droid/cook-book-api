@@ -1,15 +1,16 @@
 import pg from "pg";
-import "dotenv/config";
+import { env } from "../config/env.js";
 
 const { Pool } = pg;
 
 console.log(
-    "DATABASE_URL:",
-    process.env.DATABASE_URL ? "LOADED" : "NOT LOADED"
+    "DATABASE_URL loaded:",
+    Boolean(env.databaseUrl)
 );
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: env.databaseUrl,
+
     ssl: {
         rejectUnauthorized: false,
     },
