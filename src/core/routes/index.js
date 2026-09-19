@@ -1,10 +1,12 @@
-// Express is provided at runtime; suppress missing declaration errors when its
-// type package is unavailable in the current TypeScript environment.
-// @ts-ignore
 import { Router } from "express";
 import pool from "../config/database.js";
 
+import createRecipeRoute from "../../features/recipes/create-recipe/route.js";
+
 const router = Router();
+
+
+router.use("/recipes", createRecipeRoute);
 
 /*
 |--------------------------------------------------------------------------
