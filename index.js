@@ -1,4 +1,3 @@
-// import app from "./core/app.js";
 import express from "express";
 import { env } from "./core/config/env.js";
 import routes from "./core/routes/index.js";
