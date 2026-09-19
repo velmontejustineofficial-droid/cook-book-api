@@ -1,7 +1,11 @@
 import pool from "./database.js";
 
+let initializationPromise;
+
 export async function initializeDatabase() {
-    await pool.query(`
+    if (!initializationPromise) {
+        initializationPromise = (async () => {
+            await pool.query(`
         CREATE TABLE IF NOT EXISTS recipes (
             id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
             title VARCHAR(255) NOT NULL UNIQUE,
@@ -13,9 +17,9 @@ export async function initializeDatabase() {
                 jsonb_typeof(ingredients) = 'array'
             )
         )
-    `);
+            `);
 
-    await pool.query(`
+            await pool.query(`
         INSERT INTO recipes (title, description, ingredients)
         VALUES
             (
@@ -29,7 +33,11 @@ export async function initializeDatabase() {
                 '["pork", "shrimp paste", "bitter melon", "eggplant", "okra", "squash", "tomato"]'::jsonb
             )
         ON CONFLICT (title) DO NOTHING
-    `);
+            `);
 
-    console.log("Database tables initialized");
+            console.log("Database tables initialized");
+        })();
+    }
+
+    return initializationPromise;
 }
