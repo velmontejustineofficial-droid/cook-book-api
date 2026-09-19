@@ -1,3 +1,6 @@
+// Express is provided at runtime; suppress missing declaration errors when its
+// type package is unavailable in the current TypeScript environment.
+// @ts-ignore
 import { Router } from "express";
 import pool from "../config/database.js";
 
@@ -22,7 +25,9 @@ router.get("/health", (req, res) => {
 |--------------------------------------------------------------------------
 */
 
-router.get("/health/db", async (req, res) => {
+router.get(
+    "/health/db",
+    async (req, res) => {
     try {
         const result = await pool.query("SELECT NOW() AS time");
 
@@ -40,7 +45,8 @@ router.get("/health/db", async (req, res) => {
             database: "disconnected",
             message: error.message,
         });
-    }
-});
+        }
+    },
+);
 
 export default router;
