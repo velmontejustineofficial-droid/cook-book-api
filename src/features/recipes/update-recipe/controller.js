@@ -5,6 +5,10 @@ export async function updateRecipeController(req, res) {
     try {
         const recipe = await updateRecipe(req.params.id, req.body);
 
+        if (!recipe) {
+            return errorResponse(res, "Recipe not found", 404);
+        }
+
         return successResponse(res, recipe, "Recipe updated successfully");
     } catch (error) {
         return errorResponse(res, "Failed to update recipe", 400, error.message);
