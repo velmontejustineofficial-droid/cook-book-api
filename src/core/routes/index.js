@@ -5,6 +5,7 @@ import createRecipeRoute from "../../features/recipes/create-recipe/route.js";
 import getAllRecipeRoute from "../../features/recipes/get-all-recipe/route.js";
 import getRecipeRoute from "../../features/recipes/get-recipe/route.js";
 import updateRecipeRoute from "../../features/recipes/update-recipe/route.js";
+import deleteRecipeRoute from "../../features/recipes/delete-recipe/route.js";
 
 const router = Router();
 
@@ -13,6 +14,7 @@ router.use("/recipes", createRecipeRoute);
 router.use("/recipes", getAllRecipeRoute);
 router.use("/recipes", getRecipeRoute);
 router.use("/recipes", updateRecipeRoute);
+router.use("/recipes", deleteRecipeRoute);
 
 /*
 |--------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-const RecipeModel = (title, description, ingredients) => {
+const RecipeModel = (title, description, ingredients, category = 'Filipino', time = '—', image = null, ownerId = 'community') => {
 
   if (!title) {
     throw new Error('Recipe title is required');
@@ -14,6 +14,10 @@ const RecipeModel = (title, description, ingredients) => {
     title: title || '',
     description: description || '',
     ingredients: ingredients || [],
+    category,
+    time,
+    image,
+    ownerId,
     createdAt: new Date(),
   };
 };
