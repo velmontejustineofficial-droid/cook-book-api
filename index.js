@@ -5,7 +5,7 @@ import { initializeDatabase } from "./src/core/config/databaseInitializer.js";
 initializeDatabase()
     .then(() => {
         app.listen(env.port, () => {
-            console.log(`CookBook API running on port ${env.port}`);
+            console.log(`CookBook API running on port http://localhost:${env.port}`);
         });
     })
     .catch((error) => {
