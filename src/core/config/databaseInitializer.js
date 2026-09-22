@@ -16,7 +16,6 @@ const defaultRecipes = [
       'Serve hot with rice.',
     ],
   },
-
   {
     title: 'Adobo',
     category: 'Filipino',
@@ -43,79 +42,110 @@ const defaultRecipes = [
 ]
 
 export async function initializeDatabase() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS recipes (
-      id SERIAL PRIMARY KEY,
-      title VARCHAR(255) NOT NULL UNIQUE,
-      description TEXT NOT NULL,
-      ingredients JSONB NOT NULL DEFAULT '[]'::jsonb,
-      category VARCHAR(100) NOT NULL DEFAULT 'Filipino',
-      time VARCHAR(50) NOT NULL DEFAULT '—',
-      image TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `)
+  const client = await pool.connect()
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS recipe_steps (
-      id SERIAL PRIMARY KEY,
-      recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
-      step_number INTEGER NOT NULL,
-      instruction TEXT NOT NULL,
-      UNIQUE(recipe_id, step_number)
-    )
-  `)
+  try {
+    await client.query('BEGIN')
 
-  for (const recipe of defaultRecipes) {
-    const result = await pool.query(
-      `
-      INSERT INTO recipes (
-        title,
-        description,
-        ingredients,
-        category,
-        time,
-        image
-      )
-      VALUES ($1, $2, $3::jsonb, $4, $5, $6)
-      ON CONFLICT (title)
-      DO UPDATE SET
-        description = EXCLUDED.description,
-        ingredients = EXCLUDED.ingredients,
-        category = EXCLUDED.category,
-        time = EXCLUDED.time,
-        image = EXCLUDED.image
-      RETURNING id
-      `,
-      [
-        recipe.title,
-        recipe.description,
-        JSON.stringify(recipe.ingredients),
-        recipe.category,
-        recipe.time,
-        recipe.image,
-      ],
-    )
+    // 1. Create recipes table (without ingredients column)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS recipes (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL UNIQUE,
+        description TEXT NOT NULL,
+        category VARCHAR(100) NOT NULL DEFAULT 'Filipino',
+        time VARCHAR(50) NOT NULL DEFAULT '—',
+        image TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `)
 
-    const recipeId = result.rows[0].id
+    // 2. Create recipe_ingredients table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS recipe_ingredients (
+        id SERIAL PRIMARY KEY,
+        recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        amount VARCHAR(100),
+        UNIQUE(recipe_id, name)
+      );
+    `)
 
-    for (let i = 0; i < recipe.steps.length; i++) {
-      await pool.query(
+    // 3. Create recipe_steps table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS recipe_steps (
+        id SERIAL PRIMARY KEY,
+        recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
+        step_number INTEGER NOT NULL,
+        instruction TEXT NOT NULL,
+        UNIQUE(recipe_id, step_number)
+      );
+    `)
+
+    // 4. Seed default recipes, ingredients, and steps
+    for (const recipe of defaultRecipes) {
+      const result = await client.query(
         `
-        INSERT INTO recipe_steps (
-          recipe_id,
-          step_number,
-          instruction
+        INSERT INTO recipes (
+          title,
+          description,
+          category,
+          time,
+          image
         )
-        VALUES ($1, $2, $3)
-        ON CONFLICT (recipe_id, step_number)
-        DO UPDATE SET instruction = EXCLUDED.instruction
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (title)
+        DO UPDATE SET
+          description = EXCLUDED.description,
+          category = EXCLUDED.category,
+          time = EXCLUDED.time,
+          image = EXCLUDED.image
+        RETURNING id
         `,
-        [recipeId, i + 1, recipe.steps[i]],
+        [
+          recipe.title,
+          recipe.description,
+          recipe.category,
+          recipe.time,
+          recipe.image,
+        ],
       )
-    }
-  }
 
-  console.log('Database initialized successfully')
+      const recipeId = result.rows[0].id
+
+      // Insert ingredients into recipe_ingredients table
+      for (const ingredient of recipe.ingredients) {
+        await client.query(
+          `
+          INSERT INTO recipe_ingredients (recipe_id, name)
+          VALUES ($1, $2)
+          ON CONFLICT (recipe_id, name) DO NOTHING
+          `,
+          [recipeId, ingredient],
+        )
+      }
+
+      // Insert steps into recipe_steps table
+      for (let i = 0; i < recipe.steps.length; i++) {
+        await client.query(
+          `
+          INSERT INTO recipe_steps (recipe_id, step_number, instruction)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (recipe_id, step_number)
+          DO UPDATE SET instruction = EXCLUDED.instruction
+          `,
+          [recipeId, i + 1, recipe.steps[i]],
+        )
+      }
+    }
+
+    await client.query('COMMIT')
+    console.log('Database initialized successfully')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    console.error('Error initializing database:', error)
+  } finally {
+    client.release()
+  }
 }

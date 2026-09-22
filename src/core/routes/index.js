@@ -1,10 +1,10 @@
 import { Router } from "express";
 import pool from "../config/database.js";
 
-import createRecipeRoute from "../../features/recipes/create-recipe/route.js";
-import getAllRecipeRoute from "../../features/recipes/get-all-recipe/route.js";
-import updateRecipeRoute from "../../features/recipes/update-recipe/route.js";
-import deleteRecipeRoute from "../../features/recipes/delete-recipe/route.js";
+import createRecipeRoute from "../../features/recipes/shared/route.js";
+import getAllRecipeRoute from "../../features/recipes/shared/route.js";
+import updateRecipeRoute from "../../features/recipes/shared/route.js";
+import deleteRecipeRoute from "../../features/recipes/shared/route.js";
 
 const router = Router();
 
